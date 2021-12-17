@@ -6,5 +6,5 @@ void main() {
 
 final gobi = Gobi()
   ..route("/:path").get((request) async {
-    await request.sendFile(".dart_tool/package_config.json");
+    await request.type("html").send("Hello World!");
   });

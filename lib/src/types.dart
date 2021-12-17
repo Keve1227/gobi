@@ -277,10 +277,14 @@ class GobiRequest extends GobiComponentContainer {
     await end();
   }
 
-  GobiRequest type(String type) {
-    response.headers.contentType =
-        ContentType.parse(type.contains("/") ? type : lookupMimeType(type)!);
+  GobiRequest type(String type, {String? charset = "utf-8"}) {
+    var contentType = type.contains("/") ? type : lookupMimeType(type)!;
 
+    if (charset != null) {
+      contentType += "; charset=${Uri.encodeComponent(charset)}";
+    }
+
+    response.headers.contentType = ContentType.parse(contentType);
     return this;
   }
 
