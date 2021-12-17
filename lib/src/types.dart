@@ -138,8 +138,7 @@ class GobiRequest extends GobiComponentContainer {
       contentDisposition += "; filename=${Uri.encodeComponent(filename)}";
     }
 
-    set("content-disposition", contentDisposition);
-    return this;
+    return set("content-disposition", contentDisposition);
   }
 
   GobiRequest clone() => GobiRequest.from(this);
@@ -170,10 +169,7 @@ class GobiRequest extends GobiComponentContainer {
       bool immutable = false}) async {
     filename ??= File(path).uri.path.split("/").last;
 
-    set("content-disposition",
-        "attachment; filename=${Uri.encodeComponent(filename)}");
-
-    await sendFile(path,
+    await attachment(filename).sendFile(path,
         maxAge: maxAge,
         lastModified: lastModified,
         cacheControl: cacheControl,
@@ -203,9 +199,7 @@ class GobiRequest extends GobiComponentContainer {
   Future<void> json(Object object,
       {Object? Function(Object? nonEncodable)? toEncodable}) async {
     final json = jsonEncode(object, toEncodable: toEncodable);
-
-    type("json");
-    await send(utf8.encode(json));
+    await type("json").send(utf8.encode(json));
   }
 
   GobiRequest reason(String reasonPhrase) {
@@ -252,9 +246,9 @@ class GobiRequest extends GobiComponentContainer {
   }
 
   Future<void> sendStatus(int statusCode) async {
-    status(statusCode);
-    type("txt");
-    await send("${response.statusCode} ${response.reasonPhrase}");
+    await status(statusCode)
+        .type("txt")
+        .send("${response.statusCode} ${response.reasonPhrase}");
   }
 
   GobiRequest set(String name, Object? value) {
@@ -289,8 +283,7 @@ class GobiRequest extends GobiComponentContainer {
   }
 
   GobiRequest vary(String field) {
-    append("vary", field);
-    return this;
+    return append("vary", field);
   }
 }
 
