@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:mime/mime.dart';
+import 'package:gobi/src/utils.dart';
+import 'package:mime/mime.dart' as mime;
 
 typedef GobiMiddleware = FutureOr<void> Function(GobiRequest request);
 
@@ -143,13 +144,16 @@ class GobiRequest extends GobiComponentContainer {
 
   GobiRequest clone() => GobiRequest.from(this);
 
-  GobiRequest cookie(String name, String value,
-      {String? domain,
-      DateTime? expires,
-      bool httpOnly = true,
-      int? maxAge,
-      String? path,
-      bool secure = false}) {
+  GobiRequest cookie(
+    String name,
+    String value, {
+    String? domain,
+    DateTime? expires,
+    bool httpOnly = true,
+    int? maxAge,
+    String? path,
+    bool secure = false,
+  }) {
     response.cookies.add(Cookie(name, value)
       ..domain = domain
       ..expires = expires
@@ -161,19 +165,29 @@ class GobiRequest extends GobiComponentContainer {
     return this;
   }
 
-  Future<void> download(String path,
-      {String? filename,
-      int maxAge = 0,
-      bool lastModified = true,
-      bool cacheControl = true,
-      bool immutable = false}) async {
+  Future<void> download(
+    String path, {
+    String? filename,
+    String? root,
+    int maxAge = 0,
+    bool lastModified = true,
+    bool cacheControl = true,
+    bool immutable = false,
+    bool dotfiles = false,
+    bool windows = false,
+  }) async {
     filename ??= File(path).uri.path.split("/").last;
 
-    await attachment(filename).sendFile(path,
-        maxAge: maxAge,
-        lastModified: lastModified,
-        cacheControl: cacheControl,
-        immutable: immutable);
+    await attachment(filename).sendFile(
+      path,
+      root: root,
+      maxAge: maxAge,
+      lastModified: lastModified,
+      cacheControl: cacheControl,
+      immutable: immutable,
+      dotfiles: dotfiles,
+      windows: windows,
+    );
   }
 
   Future<void> end() async {
@@ -218,16 +232,39 @@ class GobiRequest extends GobiComponentContainer {
     await end();
   }
 
-  Future<void> sendFile(String path,
-      {int maxAge = 0,
-      bool lastModified = true,
-      bool cacheControl = true,
-      bool immutable = false}) async {
+  Future<void> sendFile(
+    String path, {
+    String? root,
+    int maxAge = 0,
+    bool lastModified = true,
+    bool cacheControl = true,
+    bool immutable = false,
+    bool dotfiles = false,
+    bool windows = false,
+  }) async {
+    if (!dotfiles) {
+      final pathSegments = Uri.file(path, windows: windows).pathSegments;
+      final hasDotfile =
+          pathSegments.indexWhere((segment) => segment.startsWith(".")) > 0;
+
+      if (hasDotfile) {
+        throw ArgumentError.value(path, "path",
+            "Path may not contain a dotfile unless dotfiles are enabled");
+      }
+    }
+
+    path = resolvePath(path, root: root, windows: windows);
+
+    if (!await File(path).exists()) {
+      throw ArgumentError.value(
+          path, "path", "The system cannot find the file specified");
+    }
+
     final file = File(path);
 
     if (response.headers.contentType == null) {
       final headerBytes = await file.openRead().first;
-      final mimeType = lookupMimeType(path, headerBytes: headerBytes)!;
+      final mimeType = mime.lookupMimeType(path, headerBytes: headerBytes)!;
       type(mimeType);
     }
 
@@ -272,7 +309,7 @@ class GobiRequest extends GobiComponentContainer {
   }
 
   GobiRequest type(String type, {String? charset = "utf-8"}) {
-    var contentType = type.contains("/") ? type : lookupMimeType(type)!;
+    var contentType = type.contains("/") ? type : mime.lookupMimeType(type)!;
 
     if (charset != null) {
       contentType += "; charset=${Uri.encodeComponent(charset)}";
@@ -316,29 +353,3 @@ class GobiServer {
     }
   }
 }
-
-String lastModifiedFormat(DateTime time) {
-  const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec"
-  ];
-
-  time = time.toUtc();
-  return "${weekdays[time.weekday - 1]}, ${time.day} ${months[time.month - 1]} ${time.year} "
-      "${intToString(time.hour, 2)}:${intToString(time.minute, 2)}:${intToString(time.second, 2)} "
-      "GMT";
-}
-
-String intToString(int number, int zeroPadding) =>
-    number.toString().padLeft(zeroPadding, '0');

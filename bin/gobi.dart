@@ -6,5 +6,5 @@ void main() {
 
 final gobi = Gobi()
   ..route("/:path").get((request) async {
-    await request.sendFile("test.jpg");
+    await request.sendFile("test.jpg", root: "./public");
   });

@@ -1,60 +1,7 @@
 import 'dart:async';
 
+import 'package:gobi/src/utils.dart';
 import 'package:gobi/src/types.dart';
-
-RegExp pathToRegExp(String path) {
-  var pattern = "^";
-  RegExpMatch? match;
-
-  while (true) {
-    if (match is RegExpMatch) {
-      path = path.substring(match.end);
-    }
-
-    match = RegExp(r"^/*$").firstMatch(path);
-    if (match is RegExpMatch) {
-      break;
-    }
-
-    match = RegExp(r"^/*\*$").firstMatch(path);
-    if (match is RegExpMatch) {
-      pattern += r"/?.*$";
-      break;
-    }
-
-    match = RegExp(r"^/*\*").firstMatch(path);
-    if (match is RegExpMatch) {
-      pattern += r"/.+?";
-      continue;
-    }
-
-    match = RegExp(r"^\\(.)").firstMatch(path);
-    if (match is RegExpMatch) {
-      pattern += match.group(1) ?? "";
-      continue;
-    }
-
-    match = RegExp(r"^/+:([a-z_][a-z_0-9]*)(?=$|/)").firstMatch(path);
-    if (match is RegExpMatch) {
-      pattern += "/(?<${match.group(1)}>[^/]+)";
-      continue;
-    }
-
-    match = RegExp(r"^/+").firstMatch(path);
-    if (match is RegExpMatch) {
-      pattern += r"/";
-      continue;
-    }
-
-    match = RegExp(r"^[^/]*").firstMatch(path);
-    if (match is RegExpMatch) {
-      pattern += RegExp.escape(match.group(0) ?? "");
-      continue;
-    }
-  }
-
-  return RegExp(pattern, caseSensitive: false, unicode: true);
-}
 
 class GobiMethodHandler extends GobiHandler {
   late final Pattern method;
