@@ -324,8 +324,6 @@ class GobiRequest extends GobiComponentContainer {
   }
 }
 
-enum GobiResult { close, next }
-
 class GobiServer {
   late final HttpServer httpServer;
   late final GobiMiddleware handler;
