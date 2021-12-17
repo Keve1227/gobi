@@ -20,6 +20,7 @@ linter:
 analyzer:
     errors:
         unawaited_futures: error
+        undefined_shown_name: warning
 
 # For more information about the core and recommended set of lints, see
 # https://dart.dev/go/core-lints
