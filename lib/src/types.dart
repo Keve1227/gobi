@@ -239,7 +239,7 @@ class GobiRequest extends GobiComponentContainer {
 
     if (lastModified) {
       final lastModified = (await file.lastModified()).toUtc();
-      set("last-modified", lastModified.toString());
+      set("last-modified", lastModifiedFormat(lastModified));
     }
 
     await stream(file.openRead());
@@ -316,3 +316,29 @@ class GobiServer {
     }
   }
 }
+
+String lastModifiedFormat(DateTime time) {
+  const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec"
+  ];
+
+  time = time.toUtc();
+  return "${weekdays[time.weekday - 1]}, ${time.day} ${months[time.month - 1]} ${time.year} "
+      "${intToString(time.hour, 2)}:${intToString(time.minute, 2)}:${intToString(time.second, 2)} "
+      "GMT";
+}
+
+String intToString(int number, int zeroPadding) =>
+    number.toString().padLeft(zeroPadding, '0');
