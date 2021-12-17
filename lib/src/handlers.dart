@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:gobi/src/utils.dart';
 import 'package:gobi/src/types.dart';
 
 class GobiMethodHandler extends GobiHandler {
@@ -23,14 +22,7 @@ class GobiRoute extends GobiHandler {
 
   late final Pattern path;
 
-  GobiRoute(Pattern path) {
-    if (path is String) {
-      this.path = pathToRegExp(path);
-      // print((this.path as RegExp).pattern);
-    } else {
-      this.path = path;
-    }
-  }
+  GobiRoute(this.path);
 
   void all(GobiMiddleware middleware) =>
       _middlewares.add(GobiMethodHandler("", middleware));
@@ -40,8 +32,11 @@ class GobiRoute extends GobiHandler {
     final match = path.matchAsPrefix(request.path, 0);
     if (match == null) return;
 
+    final rest = request.path.substring(match.end);
+    if (rest.isNotEmpty && !rest.startsWith("/")) return;
+
     request = request.clone();
-    request.path = request.path.substring(match.end);
+    request.path = rest;
 
     if (match is RegExpMatch) {
       request.params.addAll({
