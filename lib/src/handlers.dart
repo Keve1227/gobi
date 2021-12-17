@@ -32,7 +32,9 @@ class GobiRoute extends GobiHandler {
     final match = path.matchAsPrefix(request.path, 0);
     if (match == null) return;
 
-    final rest = request.path.substring(match.end);
+    final matched = match.group(0)!;
+    final advance = matched.endsWith("/") ? matched.length - 1 : matched.length;
+    final rest = request.path.substring(advance);
     if (rest.isNotEmpty && !rest.startsWith("/")) return;
 
     request = request.clone();

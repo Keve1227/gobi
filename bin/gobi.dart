@@ -5,6 +5,4 @@ void main() {
 }
 
 final gobi = Gobi()
-  ..route("/static").get((request) async {
-    await request.sendFile("test.jpg", root: "./public");
-  });
+  ..route("/static").use(GobiStatic("./public", windows: true));

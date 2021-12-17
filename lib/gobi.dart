@@ -4,6 +4,7 @@ import 'package:gobi/src/handlers.dart';
 import 'package:gobi/src/types.dart';
 
 export 'package:gobi/src/types.dart' show GobiResult;
+export 'package:gobi/src/middlewares.dart';
 
 class Gobi extends GobiRoute {
   Gobi() : super("/");
